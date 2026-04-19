@@ -1,0 +1,130 @@
+openapi: "3.0.3"
+info:
+  title: iCapital Fund Subscription API
+  version: "1.0.0"
+  description: API for managing alternative investment fund subscriptions
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /api/investors:
+    get:
+      summary: List all investors
+      operationId: listInvestors
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer }
+        - name: size
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of investors
+        "401":
+          description: Unauthorized
+
+  /api/investors/{id}:
+    get:
+      summary: Get investor by ID
+      operationId: getInvestor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Investor found
+        "404":
+          description: Not found
+        "401":
+          description: Unauthorized
+
+  /api/subscriptions:
+    post:
+      summary: Create a fund subscription
+      operationId: createSubscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [investorId, fundId, amount, currency]
+              properties:
+                investorId:
+                  type: string
+                fundId:
+                  type: string
+                amount:
+                  type: number
+                  minimum: 0
+                currency:
+                  type: string
+                  enum: [USD, EUR, GBP]
+                accreditedStatus:
+                  type: boolean
+      responses:
+        "201":
+          description: Subscription created
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+        "422":
+          description: Investor not accredited
+
+  /api/subscriptions/{id}:
+    get:
+      summary: Get subscription details
+      operationId: getSubscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Subscription details
+        "404":
+          description: Not found
+
+    delete:
+      summary: Cancel a subscription
+      operationId: cancelSubscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Subscription cancelled
+        "404":
+          description: Not found
+        "409":
+          description: Cannot cancel — already settled
+
+  /api/auth/token:
+    post:
+      summary: Authenticate and get access token
+      operationId: getToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [clientId, clientSecret]
+              properties:
+                clientId:
+                  type: string
+                clientSecret:
+                  type: string
+      responses:
+        "200":
+          description: JWT token returned
+        "401":
+          description: Invalid credentials
