@@ -15,9 +15,11 @@ const categoryColor: Record<string, 'green' | 'blue' | 'red' | 'yellow' | 'purpl
 interface TestCaseCardProps {
   testCase: TestCase;
   baseUrl?: string;
+  patternFile?: File;
+  githubUrl?: string;
 }
 
-export default function TestCaseCard({ testCase, baseUrl }: TestCaseCardProps) {
+export default function TestCaseCard({ testCase, baseUrl, patternFile, githubUrl }: TestCaseCardProps) {
   const [code, setCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -25,7 +27,7 @@ export default function TestCaseCard({ testCase, baseUrl }: TestCaseCardProps) {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const result = await generateTestCode(testCase, baseUrl);
+      const result = await generateTestCode(testCase, baseUrl, patternFile, githubUrl);
       setCode(result);
     } finally {
       setLoading(false);

@@ -8,6 +8,8 @@ import TestCaseCard from './TestCaseCard';
 
 export default function SpecAnalyzer() {
   const [file, setFile] = useState<File | null>(null);
+  const [patternFile, setPatternFile] = useState<File | null>(null);
+  const [githubUrl, setGithubUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +39,13 @@ export default function SpecAnalyzer() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 space-y-3">
           <FileUpload label="Drop your OpenAPI spec here" onFile={setFile} />
+          <FileUpload
+            label="Drop existing test file to match its pattern (optional)"
+            accept=".java,.kt,.groovy,.py,.js,.ts"
+            onFile={setPatternFile}
+          />
         </div>
         <div className="space-y-3">
           <div>
@@ -49,6 +56,32 @@ export default function SpecAnalyzer() {
               className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
             />
           </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              GitHub automation repo URL <span className="text-slate-600">(optional — generated tests will match your framework)</span>
+            </label>
+            <input
+              value={githubUrl}
+              onChange={e => setGithubUrl(e.target.value)}
+              placeholder="https://github.com/your-org/your-test-repo"
+              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-600"
+            />
+            {githubUrl && (
+              <p className="text-xs text-indigo-400 mt-1">✓ Claude will read your test files and match their style</p>
+            )}
+          </div>
+          {!githubUrl && (
+            <FileUpload
+              label="Or drop an existing test file to match its pattern"
+              accept=".java,.kt,.groovy,.py,.js,.ts"
+              onFile={setPatternFile}
+            />
+          )}
+          {patternFile && !githubUrl && (
+            <div className="bg-indigo-900/30 border border-indigo-700 rounded-lg px-3 py-2 text-xs text-indigo-300">
+              ✓ Pattern: <span className="font-mono">{patternFile.name}</span> — generated code will match your team's style
+            </div>
+          )}
           <button
             onClick={handleAnalyze}
             disabled={!file || loading}
@@ -121,7 +154,7 @@ export default function SpecAnalyzer() {
                   </div>
                   <div className="space-y-3">
                     {selected.testCases.map(tc => (
-                      <TestCaseCard key={tc.id} testCase={tc} baseUrl={baseUrl} />
+                      <TestCaseCard key={tc.id} testCase={tc} baseUrl={baseUrl} patternFile={patternFile ?? undefined} githubUrl={githubUrl || undefined} />
                     ))}
                   </div>
                 </>

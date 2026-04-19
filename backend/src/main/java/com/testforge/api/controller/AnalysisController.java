@@ -5,6 +5,7 @@ import com.testforge.api.model.CoverageGapResult;
 import com.testforge.api.model.TestCase;
 import com.testforge.api.service.AnalysisService;
 import com.testforge.api.service.ClaudeService;
+import com.testforge.api.service.GitHubService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,10 +20,12 @@ public class AnalysisController {
 
     private final AnalysisService analysisService;
     private final ClaudeService claudeService;
+    private final GitHubService gitHubService;
 
-    public AnalysisController(AnalysisService analysisService, ClaudeService claudeService) {
+    public AnalysisController(AnalysisService analysisService, ClaudeService claudeService, GitHubService gitHubService) {
         this.analysisService = analysisService;
         this.claudeService = claudeService;
+        this.gitHubService = gitHubService;
     }
 
     @PostMapping("/analyze/spec")
@@ -53,10 +56,24 @@ public class AnalysisController {
     }
 
     @PostMapping("/generate/test-code")
-    public ResponseEntity<Map<String, String>> generateTestCode(@RequestBody TestCase testCase,
-                                                                 @RequestParam(defaultValue = "http://localhost:8080") String baseUrl) {
-        String code = claudeService.generateJUnitCode(testCase, baseUrl);
-        return ResponseEntity.ok(Map.of("code", code));
+    public ResponseEntity<Map<String, String>> generateTestCode(
+            @RequestParam("testCase") String testCaseJson,
+            @RequestParam(defaultValue = "http://localhost:8080") String baseUrl,
+            @RequestParam(value = "pattern", required = false) MultipartFile patternFile,
+            @RequestParam(value = "githubUrl", required = false) String githubUrl) {
+        try {
+            TestCase testCase = new com.fasterxml.jackson.databind.ObjectMapper().readValue(testCaseJson, TestCase.class);
+            String patternCode = null;
+            if (githubUrl != null && !githubUrl.isBlank()) {
+                patternCode = gitHubService.fetchTestPatterns(githubUrl);
+            } else if (patternFile != null) {
+                patternCode = new String(patternFile.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            }
+            String code = claudeService.generateJUnitCode(testCase, baseUrl, patternCode);
+            return ResponseEntity.ok(Map.of("code", code));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/health")

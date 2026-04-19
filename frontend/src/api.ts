@@ -18,8 +18,17 @@ export async function analyzeCoverage(specFile: File, testFile: File): Promise<C
   return data;
 }
 
-export async function generateTestCode(testCase: TestCase, baseUrl?: string): Promise<string> {
-  const params = baseUrl ? `?baseUrl=${encodeURIComponent(baseUrl)}` : '';
-  const { data } = await axios.post<{ code: string }>(`${BASE}/generate/test-code${params}`, testCase);
+export async function generateTestCode(
+  testCase: TestCase,
+  baseUrl?: string,
+  patternFile?: File,
+  githubUrl?: string
+): Promise<string> {
+  const form = new FormData();
+  form.append('testCase', JSON.stringify(testCase));
+  if (baseUrl) form.append('baseUrl', baseUrl);
+  if (githubUrl) form.append('githubUrl', githubUrl);
+  else if (patternFile) form.append('pattern', patternFile);
+  const { data } = await axios.post<{ code: string }>(`${BASE}/generate/test-code`, form);
   return data.code;
 }
