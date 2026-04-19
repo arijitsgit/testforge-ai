@@ -39,13 +39,8 @@ export default function SpecAnalyzer() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2 space-y-3">
+        <div className="md:col-span-2">
           <FileUpload label="Drop your OpenAPI spec here" onFile={setFile} />
-          <FileUpload
-            label="Drop existing test file to match its pattern (optional)"
-            accept=".java,.kt,.groovy,.py,.js,.ts"
-            onFile={setPatternFile}
-          />
         </div>
         <div className="space-y-3">
           <div>
